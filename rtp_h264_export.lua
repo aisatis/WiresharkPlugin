@@ -219,6 +219,7 @@ do
             end
             local h264s = { f_h264() } -- using table because one packet may contains more than one RTP
             
+            local has_stapa = false
             for i,h264_f in ipairs(h264s) do
                 if h264_f.len < 2 then
                     return
@@ -233,11 +234,17 @@ do
                 elseif hdr_type == 24 then
                     -- STAP-A Single-time aggregation
                     process_stap_a(stream_info, h264)
+                    has_stapa = true
                 elseif hdr_type == 28 then
                     -- FU-A
                     process_fu_a(stream_info, h264)
                 else
                     twappend("Error: No.=" .. tostring(pinfo.number) .. " unknown type=" .. hdr_type .. " ; we only know 1-23(Single NALU),24(STAP-A),28(FU-A)!")
+                end
+
+                if has_stapa == true then
+                    -- other parts is parts of stap-a,we should omit it!
+                    break
                 end
             end
         end
